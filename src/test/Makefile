@@ -472,6 +472,9 @@ vtx_msp_unittest_DEFINES := \
 		USE_VTX_TABLE= \
 		USE_VTX_MSP=
 
+windspeed_unittest_SRC := \
+		$(USER_DIR)/sensors/windspeed.c
+
 # Please tweak the following variable definitions as needed by your
 # project, except GTEST_HEADERS, which you can use in your own targets
 # but shouldn't modify.
@@ -557,11 +560,11 @@ endif
 
 # Flags passed to the C compiler.
 C_FLAGS = $(COMMON_FLAGS) \
-	-std=gnu99
+	-std=gnu99 -O1
 
 # Flags passed to the C++ compiler.
 CXX_FLAGS = $(COMMON_FLAGS) \
-	-std=gnu++14
+	-std=gnu++14 -O1
 
 # Compiler flags for coverage instrumentation
 ifdef USE_COVERAGE
