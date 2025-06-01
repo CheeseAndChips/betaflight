@@ -4,6 +4,8 @@
 extern "C" {
     #include "sensors/windspeed.h"
     #include "sensors/windspeed_unit.h"
+
+    extern windspeedTxBuffer_t windspeedTxBuffer;
 }
 
 #include "unittest_macros.h"
@@ -90,3 +92,35 @@ TEST(WINDSPEEDUnitTest, ParseOk) {
         << "Bad checksum: " << response.checksum[0] << response.checksum[1];
 }
 
+TEST(WINDSPEEDUnitTest, BasicEncode) {
+    windspeedEncodedID_t id{'0', '2'};
+    bool success = windspeedPrepareCommand(id, "DFP");
+    EXPECT_TRUE(success);
+    EXPECT_STREQ(windspeedTxBuffer.buffer, "$02,DFP*7C\r\n");
+}
+
+// $ - 1 char
+// id - 2 chars
+// , - 1 char
+// payload - n chars
+// * - 1 char
+// checksum - 2 chars
+// crlf - 2 chars
+// null terminator - 1 char
+const size_t MAX_PAYLOAD_LENGTH = WINDSPEED_TX_BUFFER_SIZE - (1 + 2 + 1 + 1 + 2 + 2 + 1);
+
+TEST(WINDSPEEDUnitTest, EncodeWithMaxLength) {
+    windspeedEncodedID_t id{'0', '2'};
+    std::string command = std::string(MAX_PAYLOAD_LENGTH, 'A');
+    bool success = windspeedPrepareCommand(id, command.c_str());
+    EXPECT_TRUE(success);
+    std::string expected_result = "$02," + command + "*2E\r\n";
+    EXPECT_STREQ(windspeedTxBuffer.buffer, expected_result.c_str());
+}
+
+TEST(WINDSPEEDUnitTest, EncodeTooLarge) {
+    windspeedEncodedID_t id{'0', '2'};
+    std::string command = std::string(MAX_PAYLOAD_LENGTH+1, 'A');
+    bool success = windspeedPrepareCommand(id, command.c_str());
+    EXPECT_FALSE(success);
+}
