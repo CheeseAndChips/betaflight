@@ -74,27 +74,60 @@ STATIC_UNIT_TESTED windspeedParseError_t windspeedParseResponse(char *buffer, wi
     return windspeedParseOk;
 }
 
+static bool windspeedPushChar(char **buffer, int *bufferRemaining, char c) {
+    if (*bufferRemaining <= 0) {
+        return false;
+    }
+    **buffer = c;
+    ++(*buffer);
+    --(*bufferRemaining);
+    return true;
+}
+
+static bool windspeedPushStringLen(char **buffer, int *bufferRemaining, const char *string, int stringLen) {
+    for (int i = 0; i < stringLen; i++) {
+        if (!windspeedPushChar(buffer, bufferRemaining, string[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool windspeedPushString(char **buffer, int *bufferRemaining, const char *string) {
+    return windspeedPushStringLen(buffer, bufferRemaining, string, strlen(string));
+}
+
 STATIC_UNIT_TESTED bool windspeedPrepareCommand(const windspeedEncodedID_t id, const char *payload) {
     windspeedEncodedChecksum_t checksum_encoded;
-    int buffer_filled = snprintf(
-        windspeedTxBuffer.buffer,
-        WINDSPEED_TX_BUFFER_SIZE,
-        "$%.2s,%s",
-        id, payload
-    );
-    int buffer_remaining = WINDSPEED_TX_BUFFER_SIZE - buffer_filled;
-    if (buffer_remaining <= 0) {
+    int bufferRemaining = WINDSPEED_TX_BUFFER_SIZE;
+    char *buffer = windspeedTxBuffer.buffer;
+    if (!windspeedPushChar(&buffer, &bufferRemaining, '$')) {
+        return false;
+    }
+    if (!windspeedPushStringLen(&buffer, &bufferRemaining, id, 2)) {
+        return false;
+    }
+    if (!windspeedPushChar(&buffer, &bufferRemaining, ',')) {
+        return false;
+    }
+    if (!windspeedPushString(&buffer, &bufferRemaining, payload)) {
         return false;
     }
     uint8_t checksum = windspeedComputeChecksum(windspeedTxBuffer.buffer + 1);
     windspeedEncodeChecksum(checksum, checksum_encoded);
-    buffer_remaining -= snprintf(
-        windspeedTxBuffer.buffer + buffer_filled,
-        buffer_remaining,
-        "*%.2s\r\n",
-        checksum_encoded
-    );
-    if (buffer_remaining <= 0) {
+    if (!windspeedPushChar(&buffer, &bufferRemaining, '*')) {
+        return false;
+    }
+    if (!windspeedPushStringLen(&buffer, &bufferRemaining, checksum_encoded, 2)) {
+        return false;
+    }
+    if (!windspeedPushString(&buffer, &bufferRemaining, "\r\n")) {
+        return false;
+    }
+    if (!windspeedPushChar(&buffer, &bufferRemaining, '\0')) {
+        return false;
+    }
+    if (bufferRemaining < 0) {
         return false;
     }
     return true;
