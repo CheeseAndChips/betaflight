@@ -99,6 +99,7 @@
 #include "sensors/sensors.h"
 #include "sensors/rangefinder.h"
 #include "sensors/opticalflow.h"
+#include "sensors/windspeed.h"
 
 #include "telemetry/telemetry.h"
 #include "telemetry/crsf.h"
@@ -478,6 +479,8 @@ task_attribute_t task_attributes[TASK_COUNT] = {
 #ifdef USE_GIMBAL
     [TASK_GIMBAL] = DEFINE_TASK("GIMBAL", NULL, NULL, gimbalUpdate, TASK_PERIOD_HZ(100), TASK_PRIORITY_MEDIUM),
 #endif
+
+    [TASK_WINDSPEED] = DEFINE_TASK("WINDSPEED", NULL, NULL, windspeedUpdate, TASK_PERIOD_HZ(10), TASK_PRIORITY_LOW),
 };
 
 task_t *getTask(unsigned taskId)
@@ -671,4 +674,6 @@ void tasksInit(void)
 #ifdef USE_GIMBAL
     setTaskEnabled(TASK_GIMBAL, true);
 #endif
+
+    setTaskEnabled(TASK_WINDSPEED, true);
 }

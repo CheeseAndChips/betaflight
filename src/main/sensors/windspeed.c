@@ -1,8 +1,11 @@
 #include "windspeed.h"
+#include "drivers/serial.h"
+#include "io/serial.h"
 #include "windspeed_unit.h"
-#include <stdio.h>
 
 STATIC_UNIT_TESTED windspeedTxBuffer_t windspeedTxBuffer;
+
+static serialPort_t *port = NULL;
 
 STATIC_UNIT_TESTED uint8_t windspeedComputeChecksum(const char *buffer) {
     uint8_t result = 0;
@@ -131,4 +134,41 @@ STATIC_UNIT_TESTED bool windspeedPrepareCommand(const windspeedEncodedID_t id, c
         return false;
     }
     return true;
+}
+
+void windspeedInit(void) {
+    const serialPortConfig_t *portConfig = findSerialPortConfig(FUNCTION_WINDSPEED);
+    if (!portConfig) {
+        return;
+    }
+
+    port = openSerialPort(
+        portConfig->identifier,
+        FUNCTION_WINDSPEED,
+        NULL, NULL,
+        9600, // TODO: make configurable
+        MODE_RXTX,
+        SERIAL_STOPBITS_1 | SERIAL_PARITY_NO
+    );
+}
+
+void windspeedUpdate(timeUs_t currentTimeUs) {
+    (void)windspeedPrepareCommand;
+    (void)windspeedParseResponse;
+    (void)windspeedDecodeChecksum;
+
+    static timeUs_t lastTick = 0;
+    if (port == NULL) {
+        return;
+    }
+
+    if (!isSerialTransmitBufferEmpty(port)) {
+        return;
+    }
+
+    if (currentTimeUs - lastTick >= 200) {
+        lastTick = currentTimeUs;
+        const char *s = "sveiki\r\n";
+        serialWriteBuf(port, (const uint8_t*)s, strlen(s));
+    }
 }

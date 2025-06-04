@@ -172,6 +172,7 @@
 #include "sensors/gyro.h"
 #include "sensors/gyro_init.h"
 #include "sensors/initialisation.h"
+#include "sensors/windspeed.h"
 
 #include "telemetry/telemetry.h"
 
@@ -850,6 +851,8 @@ void init(void)
 #ifdef USE_GIMBAL
     gimbalInit();
 #endif
+
+    windspeedInit();
 
     batteryInit(); // always needs doing, regardless of features.
 
