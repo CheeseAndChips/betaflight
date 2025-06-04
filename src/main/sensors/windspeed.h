@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "common/time.h"
+
 #define WINDSPEED_TX_BUFFER_SIZE (64)
 
 typedef enum {
@@ -17,7 +19,7 @@ typedef enum {
     windspeedParseBadChecksumLength,
 } windspeedParseError_t;
 
-const uint16_t WINDSPEED_INVALID_CHECKSUM = 0xffff;
+#define WINDSPEED_INVALID_CHECKSUM (0xffff)
 
 typedef char windspeedEncodedID_t[2];
 typedef char windspeedEncodedChecksum_t[2];
@@ -32,3 +34,6 @@ typedef struct {
     char buffer[WINDSPEED_TX_BUFFER_SIZE];
     size_t buffer_filled;
 } windspeedTxBuffer_t;
+
+void windspeedInit(void);
+void windspeedUpdate(timeUs_t currentTimeUs);

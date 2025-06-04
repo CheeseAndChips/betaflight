@@ -131,6 +131,7 @@ COMMON_SRC = \
             sensors/compass.c \
             sensors/gyro.c \
             sensors/gyro_init.c \
+            sensors/windspeed.c \
             sensors/initialisation.c \
             blackbox/blackbox.c \
             blackbox/blackbox_encoding.c \

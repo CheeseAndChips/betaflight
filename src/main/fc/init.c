@@ -169,6 +169,7 @@
 #include "sensors/gyro.h"
 #include "sensors/gyro_init.h"
 #include "sensors/initialisation.h"
+#include "sensors/windspeed.h"
 
 #include "telemetry/telemetry.h"
 
@@ -859,6 +860,8 @@ void init(void)
 #endif
 
 #endif // VTX_CONTROL
+
+    windspeedInit();
 
     batteryInit(); // always needs doing, regardless of features.
 

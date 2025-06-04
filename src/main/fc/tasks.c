@@ -95,6 +95,7 @@
 #include "sensors/gyro.h"
 #include "sensors/sensors.h"
 #include "sensors/rangefinder.h"
+#include "sensors/windspeed.h"
 
 #include "telemetry/telemetry.h"
 #include "telemetry/crsf.h"
@@ -454,6 +455,7 @@ task_attribute_t task_attributes[TASK_COUNT] = {
     [TASK_RC_STATS] = DEFINE_TASK("RC_STATS", NULL, NULL, rcStatsUpdate, TASK_PERIOD_HZ(100), TASK_PRIORITY_LOW),
 #endif
 
+    [TASK_WINDSPEED] = DEFINE_TASK("WINDSPEED", NULL, NULL, windspeedUpdate, TASK_PERIOD_HZ(10), TASK_PRIORITY_LOW),
 };
 
 task_t *getTask(unsigned taskId)
@@ -629,4 +631,6 @@ void tasksInit(void)
 #ifdef USE_RC_STATS
     setTaskEnabled(TASK_RC_STATS, true);
 #endif
+
+    setTaskEnabled(TASK_WINDSPEED, true);
 }
