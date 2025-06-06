@@ -173,9 +173,13 @@ typedef enum {
     windspeedStateErrored,
 } windspeedState_t;
 
-static const windspeedEncodedID_t ID = {'0', '1'};
+// static const windspeedEncodedID_t ID = {'0', '1'};
 
-static char ID_RECEIVED[32];
+static char DATA_RECEIVED[32];
+
+char *windspeedGetLine(void) {
+    return DATA_RECEIVED;
+}
 
 static windspeedState_t state = windspeedStateInitial;
 void windspeedUpdate(timeUs_t currentTimeUs) {
@@ -183,7 +187,7 @@ void windspeedUpdate(timeUs_t currentTimeUs) {
     (void)windspeedPrepareCommand;
     (void)windspeedParseResponse;
     (void)windspeedDecodeChecksum;
-    bool transmitCommand = false;
+    // bool transmitCommand = false;
 
     if (port == NULL || state == windspeedStateErrored) {
         return;
@@ -202,60 +206,69 @@ void windspeedUpdate(timeUs_t currentTimeUs) {
 
     windspeedParsedResponse_t parsed;
     bool haveRx = windspeedParseResponse(windspeedRxBuffer.buffer, &parsed) == windspeedParseOk;
-
-    switch (state) {
-        case windspeedStateInitial: {
-            if (!windspeedPrepareCommand(ID, "ID?")) {
-                state = windspeedStateErrored;
-                return;
-            }
-            transmitCommand = true;
-            state = windspeedStateWaitingForId;
-        }; break;
-        case windspeedStateWaitingForId: {
-            if (!haveRx) break;
-            if (strncmp(parsed.payload_start, "ID=", 3) == 0) {
-                if (strlen(parsed.payload_start) > sizeof(ID_RECEIVED) + 1) {
-                    state = windspeedStateErrored;
-                    return;
-                }
-                if (!windspeedPrepareCommand(ID, "CU?")) {
-                    state = windspeedStateErrored;
-                    return;
-                }
-                transmitCommand = true;
-                state = windspeedStateWaitingForPeriod;
-            }
-        }; break;
-        case windspeedStateWaitingForPeriod: {
-            if (!haveRx) break;
-            if (strncmp(parsed.payload_start, "CU=", 3) == 0) {
-                if (strlen(parsed.payload_start) > sizeof(ID_RECEIVED) + 1) {
-                    state = windspeedStateErrored;
-                    return;
-                }
-                int payloadLen = strlen(parsed.payload_start);
-                char enabled = parsed.payload_start[3] == 'E';
-                if (payloadLen < 6) {
-                    
-                }
-                int timing = atoi(parsed.payload_start + 5);
-                (void)timing;
-                (void)enabled;
-                // transmitCommand = true;
-                state = windspeedStateWaitingForPeriod;
-            }
-        }; break;
-        case windspeedStateRunning: {
-            if (!haveRx) break;
-            
-        }; break;
-        case windspeedStateErrored: {
-            
-        }; break;
+    if (haveRx) {
+        windspeedRxBuffer.buffer_filled = 0;
+        unsigned int charsToCopy = strlen(parsed.payload_start);
+        if (charsToCopy > sizeof(DATA_RECEIVED) - 1) {
+            charsToCopy = sizeof(DATA_RECEIVED) - 1;
+        }
+        memset(DATA_RECEIVED, 0, sizeof(DATA_RECEIVED));
+        memcpy(DATA_RECEIVED, parsed.payload_start, charsToCopy);
     }
 
-    if (transmitCommand) {
-        serialWriteBuf(port, (uint8_t*)windspeedTxBuffer.buffer, strlen(windspeedTxBuffer.buffer));
-    }
+    // switch (state) {
+    //     case windspeedStateInitial: {
+    //         if (!windspeedPrepareCommand(ID, "ID?")) {
+    //             state = windspeedStateErrored;
+    //             return;
+    //         }
+    //         transmitCommand = true;
+    //         state = windspeedStateWaitingForId;
+    //     }; break;
+    //     case windspeedStateWaitingForId: {
+    //         if (!haveRx) break;
+    //         if (strncmp(parsed.payload_start, "ID=", 3) == 0) {
+    //             if (strlen(parsed.payload_start) > sizeof(ID_RECEIVED) + 1) {
+    //                 state = windspeedStateErrored;
+    //                 return;
+    //             }
+    //             if (!windspeedPrepareCommand(ID, "CU?")) {
+    //                 state = windspeedStateErrored;
+    //                 return;
+    //             }
+    //             transmitCommand = true;
+    //             state = windspeedStateWaitingForPeriod;
+    //         }
+    //     }; break;
+    //     case windspeedStateWaitingForPeriod: {
+    //         if (!haveRx) break;
+    //         if (strncmp(parsed.payload_start, "CU=", 3) == 0) {
+    //             if (strlen(parsed.payload_start) > sizeof(ID_RECEIVED) + 1) {
+    //                 state = windspeedStateErrored;
+    //                 return;
+    //             }
+    //             int payloadLen = strlen(parsed.payload_start);
+    //             char enabled = parsed.payload_start[3] == 'E';
+    //             if (payloadLen < 6) {
+    //
+    //             }
+    //             int timing = atoi(parsed.payload_start + 5);
+    //             (void)timing;
+    //             (void)enabled;
+    //             // transmitCommand = true;
+    //             state = windspeedStateWaitingForPeriod;
+    //         }
+    //     }; break;
+    //     case windspeedStateRunning: {
+    //         if (!haveRx) break;
+    //
+    //     }; break;
+    //     case windspeedStateErrored: {
+    //
+    //     }; break;
+    // }
+
+    // if (transmitCommand) {
+    //     serialWriteBuf(port, (uint8_t*)windspeedTxBuffer.buffer, strlen(windspeedTxBuffer.buffer));
+    // }
 }

@@ -167,6 +167,7 @@ bool cliMode = false;
 #include "sensors/gyro.h"
 #include "sensors/gyro_init.h"
 #include "sensors/sensors.h"
+#include "sensors/windspeed.h"
 
 #include "telemetry/frsky_hub.h"
 #include "telemetry/telemetry.h"
@@ -3153,6 +3154,19 @@ static void cliVtxInfo(const char *cmdName, char *cmdline)
     }
 }
 #endif // USE_VTX_TABLE
+
+static void cliGetWindspeed(const char *cmdName, char *cmdline)
+{
+    UNUSED(cmdName);
+    UNUSED(cmdline);
+
+    const char *windspeed = windspeedGetLine();
+    if (strlen(windspeed)) {
+        cliPrintLinef("windspeed: '%s'", windspeed);
+    } else {
+        cliPrintLinef("No data");
+    }
+}
 
 #if defined(USE_SIMPLIFIED_TUNING)
 static void applySimplifiedTuningAllProfiles(void)
@@ -6684,6 +6698,7 @@ const clicmd_t cmdTable[] = {
     CLI_COMMAND_DEF("vtx_info", "vtx power config dump", NULL, cliVtxInfo),
     CLI_COMMAND_DEF("vtxtable", "vtx frequency table", "<band> <bandname> <bandletter> [FACTORY|CUSTOM] <freq> ... <freq>\r\n", cliVtxTable),
 #endif
+    CLI_COMMAND_DEF("windspeed", "get windspeed values", NULL, cliGetWindspeed),
 };
 
 static void cliHelp(const char *cmdName, char *cmdline)
