@@ -2,8 +2,11 @@
 #include "drivers/serial.h"
 #include "io/serial.h"
 #include "windspeed_unit.h"
+#include <string.h>
+#include <stdlib.h>
 
-STATIC_UNIT_TESTED windspeedTxBuffer_t windspeedTxBuffer;
+STATIC_UNIT_TESTED windspeedBuffer_t windspeedTxBuffer;
+static windspeedBuffer_t windspeedRxBuffer;
 
 static serialPort_t *port = NULL;
 
@@ -146,19 +149,43 @@ void windspeedInit(void) {
         portConfig->identifier,
         FUNCTION_WINDSPEED,
         NULL, NULL,
-        9600, // TODO: make configurable
+        4800, // TODO: make configurable
         MODE_RXTX,
         SERIAL_STOPBITS_1 | SERIAL_PARITY_NO
     );
 }
 
+static bool windspeedTryPushingRx(char character) {
+    // make sure nullbyte fits
+    if (windspeedRxBuffer.buffer_filled >= WINDSPEED_TX_BUFFER_SIZE - 1) {
+        return false;
+    }
+    windspeedRxBuffer.buffer[windspeedRxBuffer.buffer_filled++] = character;
+    windspeedRxBuffer.buffer[windspeedRxBuffer.buffer_filled] = 0;
+    return true;
+}
+
+typedef enum {
+    windspeedStateInitial = 0,
+    windspeedStateWaitingForId,
+    windspeedStateWaitingForPeriod,
+    windspeedStateRunning,
+    windspeedStateErrored,
+} windspeedState_t;
+
+static const windspeedEncodedID_t ID = {'0', '1'};
+
+static char ID_RECEIVED[32];
+
+static windspeedState_t state = windspeedStateInitial;
 void windspeedUpdate(timeUs_t currentTimeUs) {
+    (void)currentTimeUs;
     (void)windspeedPrepareCommand;
     (void)windspeedParseResponse;
     (void)windspeedDecodeChecksum;
+    bool transmitCommand = false;
 
-    static timeUs_t lastTick = 0;
-    if (port == NULL) {
+    if (port == NULL || state == windspeedStateErrored) {
         return;
     }
 
@@ -166,9 +193,69 @@ void windspeedUpdate(timeUs_t currentTimeUs) {
         return;
     }
 
-    if (currentTimeUs - lastTick >= 200) {
-        lastTick = currentTimeUs;
-        const char *s = "sveiki\r\n";
-        serialWriteBuf(port, (const uint8_t*)s, strlen(s));
+    for (uint32_t i = 0; i < serialRxBytesWaiting(port); i++) {
+        if (!windspeedTryPushingRx(serialRead(port))) {
+            windspeedRxBuffer.buffer_filled = 0;
+            return;
+        }
+    }
+
+    windspeedParsedResponse_t parsed;
+    bool haveRx = windspeedParseResponse(windspeedRxBuffer.buffer, &parsed) == windspeedParseOk;
+
+    switch (state) {
+        case windspeedStateInitial: {
+            if (!windspeedPrepareCommand(ID, "ID?")) {
+                state = windspeedStateErrored;
+                return;
+            }
+            transmitCommand = true;
+            state = windspeedStateWaitingForId;
+        }; break;
+        case windspeedStateWaitingForId: {
+            if (!haveRx) break;
+            if (strncmp(parsed.payload_start, "ID=", 3) == 0) {
+                if (strlen(parsed.payload_start) > sizeof(ID_RECEIVED) + 1) {
+                    state = windspeedStateErrored;
+                    return;
+                }
+                if (!windspeedPrepareCommand(ID, "CU?")) {
+                    state = windspeedStateErrored;
+                    return;
+                }
+                transmitCommand = true;
+                state = windspeedStateWaitingForPeriod;
+            }
+        }; break;
+        case windspeedStateWaitingForPeriod: {
+            if (!haveRx) break;
+            if (strncmp(parsed.payload_start, "CU=", 3) == 0) {
+                if (strlen(parsed.payload_start) > sizeof(ID_RECEIVED) + 1) {
+                    state = windspeedStateErrored;
+                    return;
+                }
+                int payloadLen = strlen(parsed.payload_start);
+                char enabled = parsed.payload_start[3] == 'E';
+                if (payloadLen < 6) {
+                    
+                }
+                int timing = atoi(parsed.payload_start + 5);
+                (void)timing;
+                (void)enabled;
+                // transmitCommand = true;
+                state = windspeedStateWaitingForPeriod;
+            }
+        }; break;
+        case windspeedStateRunning: {
+            if (!haveRx) break;
+            
+        }; break;
+        case windspeedStateErrored: {
+            
+        }; break;
+    }
+
+    if (transmitCommand) {
+        serialWriteBuf(port, (uint8_t*)windspeedTxBuffer.buffer, strlen(windspeedTxBuffer.buffer));
     }
 }

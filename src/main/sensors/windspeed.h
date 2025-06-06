@@ -33,7 +33,7 @@ typedef struct {
 typedef struct {
     char buffer[WINDSPEED_TX_BUFFER_SIZE];
     size_t buffer_filled;
-} windspeedTxBuffer_t;
+} windspeedBuffer_t;
 
 void windspeedInit(void);
 void windspeedUpdate(timeUs_t currentTimeUs);
