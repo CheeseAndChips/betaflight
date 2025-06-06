@@ -139,6 +139,8 @@ STATIC_UNIT_TESTED bool windspeedPrepareCommand(const windspeedEncodedID_t id, c
     return true;
 }
 
+static char DATA_RECEIVED[32];
+
 void windspeedInit(void) {
     const serialPortConfig_t *portConfig = findSerialPortConfig(FUNCTION_WINDSPEED);
     if (!portConfig) {
@@ -153,6 +155,8 @@ void windspeedInit(void) {
         MODE_RXTX,
         SERIAL_STOPBITS_1 | SERIAL_PARITY_NO
     );
+
+    strcpy(DATA_RECEIVED, "No data");
 }
 
 static bool windspeedTryPushingRx(char character) {
@@ -174,8 +178,6 @@ typedef enum {
 } windspeedState_t;
 
 // static const windspeedEncodedID_t ID = {'0', '1'};
-
-static char DATA_RECEIVED[32];
 
 const char* windspeedGetLine(void) {
     return DATA_RECEIVED;
