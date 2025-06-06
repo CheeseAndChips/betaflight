@@ -1649,6 +1649,8 @@ const clivalue_t valueTable[] = {
     { "osd_sys_fan_speed_pos",      VAR_UINT16  | MASTER_VALUE, .config.minmaxUnsigned = { 0, OSD_POSCFG_MAX }, PG_OSD_ELEMENT_CONFIG, offsetof(osdElementConfig_t, item_pos[OSD_SYS_FAN_SPEED]) },
 #endif
 
+    { "osd_windspeed_pos",          VAR_UINT16  | MASTER_VALUE, .config.minmaxUnsigned = { 0, OSD_POSCFG_MAX }, PG_OSD_ELEMENT_CONFIG, offsetof(osdElementConfig_t, item_pos[OSD_WINDSPEED]) },
+
     // OSD stats enabled flags are stored as bitmapped values inside a 32bit parameter
     { "osd_stat_bitmask",     VAR_UINT32 | MASTER_VALUE, .config.u32Max = UINT32_MAX, PG_OSD_CONFIG, offsetof(osdConfig_t, enabled_stats)},
 

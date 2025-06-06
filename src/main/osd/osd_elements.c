@@ -173,6 +173,7 @@
 #include "sensors/battery.h"
 #include "sensors/sensors.h"
 #include "sensors/rangefinder.h"
+#include "sensors/windspeed.h"
 
 #ifdef USE_GPS_PLUS_CODES
 // located in lib/main/google/olc
@@ -1830,6 +1831,11 @@ static void osdElementSys(osdElementParms_t *element)
 }
 #endif
 
+static void osdElementWindspeed(osdElementParms_t *element)
+{
+    strcpy(element->buff, windspeedGetLine());
+}
+
 // Define the order in which the elements are drawn.
 // Elements positioned later in the list will overlay the earlier
 // ones if their character positions overlap
@@ -2086,6 +2092,7 @@ const osdElementDrawFn osdElementDrawFunction[OSD_ITEM_COUNT] = {
 #ifdef USE_RANGEFINDER
     [OSD_LIDAR_DIST]              = osdElementLidarDist,
 #endif
+    [OSD_WINDSPEED]               = osdElementWindspeed,
 };
 
 // Define the mapping between the OSD element id and the function to draw its background (static part)
