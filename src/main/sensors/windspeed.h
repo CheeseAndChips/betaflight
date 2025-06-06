@@ -37,3 +37,4 @@ typedef struct {
 
 void windspeedInit(void);
 void windspeedUpdate(timeUs_t currentTimeUs);
+char *windspeedGetLine(void);
