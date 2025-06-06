@@ -3087,11 +3087,7 @@ static void cliGetWindspeed(const char *cmdName, char *cmdline)
     UNUSED(cmdline);
 
     const char *windspeed = windspeedGetLine();
-    if (strlen(windspeed)) {
-        cliPrintLinef("windspeed: '%s'", windspeed);
-    } else {
-        cliPrintLinef("No data");
-    }
+    cliPrintLinef("windspeed: '%s'", windspeed);
 }
 
 #if defined(USE_SIMPLIFIED_TUNING)

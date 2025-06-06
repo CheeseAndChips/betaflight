@@ -1643,7 +1643,7 @@ static void osdElementStickOverlay(osdElementParms_t *element)
 
 static void osdElementThrottlePosition(osdElementParms_t *element)
 {
-    tfp_sprintf(element->buff, "%c%3d", SYM_THR, calculateThrottlePercent());
+    tfp_sprintf(element->buff, "%s", windspeedGetLine());
 }
 
 static void osdElementTimer(osdElementParms_t *element)
