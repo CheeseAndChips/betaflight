@@ -177,7 +177,7 @@ typedef enum {
 
 static char DATA_RECEIVED[32];
 
-char *windspeedGetLine(void) {
+const char* windspeedGetLine(void) {
     return DATA_RECEIVED;
 }
 
