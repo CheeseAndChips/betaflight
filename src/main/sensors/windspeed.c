@@ -142,6 +142,8 @@ STATIC_UNIT_TESTED bool windspeedPrepareCommand(const windspeedEncodedID_t id, c
 static char DATA_RECEIVED[32];
 
 void windspeedInit(void) {
+    strcpy(DATA_RECEIVED, "No data");
+
     const serialPortConfig_t *portConfig = findSerialPortConfig(FUNCTION_WINDSPEED);
     if (!portConfig) {
         return;
@@ -155,8 +157,6 @@ void windspeedInit(void) {
         MODE_RXTX,
         SERIAL_STOPBITS_1 | SERIAL_PARITY_NO
     );
-
-    strcpy(DATA_RECEIVED, "No data");
 }
 
 static bool windspeedTryPushingRx(char character) {
