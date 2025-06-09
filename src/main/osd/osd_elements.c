@@ -1710,7 +1710,7 @@ static void osdElementStickOverlay(osdElementParms_t *element)
 
 static void osdElementThrottlePosition(osdElementParms_t *element)
 {
-    tfp_sprintf(element->buff, "%s", windspeedGetLine());
+    tfp_sprintf(element->buff, "%c%3d", SYM_THR, calculateThrottlePercent());
 }
 
 static void osdElementTimer(osdElementParms_t *element)
@@ -1945,6 +1945,7 @@ static const uint8_t osdElementDisplayOrder[] = {
 #ifdef USE_RANGEFINDER
     OSD_LIDAR_DIST,
 #endif
+    OSD_WINDSPEED,
 };
 
 // Define the mapping between the OSD element id and the function to draw it
